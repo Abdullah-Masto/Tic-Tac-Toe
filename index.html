@@ -16,19 +16,24 @@
     />
   </head>
   <body>
+    <div class="overlay"></div>
+    <div class="message">
+      <p class="text"></p>
+      <button class="play">play again</button>
+    </div>
     <header>
       <h1>Tic Tac Toe</h1>
     </header>
     <main>
       <div class="players">
         <div class="container">
-          <div class="player">
+          <div class="player one">
             <button class="human set active">Human</button>
             <button class="bot set">Bot</button>
             <input type="text" name="" id="" class="name" />
           </div>
           <div class="vs"><h2>VS</h2></div>
-          <div class="player">
+          <div class="player two">
             <button class="human set">Human</button>
             <button class="bot set active">Bot</button>
             <input type="text" name="" id="" class="name" />
@@ -39,6 +44,7 @@
         <button class="easy set active">Easy</button>
         <button class="hard set">Hard</button>
       </div>
+      <div class="mark">X</div>
       <div class="board">
         <button></button><button></button><button></button><button></button
         ><button></button><button></button><button></button><button></button
