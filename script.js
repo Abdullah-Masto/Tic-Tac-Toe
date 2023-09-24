@@ -192,6 +192,8 @@ let DisplayController = (function () {
     this.setPlayerInfo(player1, player1Info);
     this.setPlayerInfo(player2, player2Info);
     this.clearBoard();
+    displayMark.textContent = currentPlayer.getMark();
+    botPlay();
   };
 
   controller.getDifficulty = function () {
@@ -199,7 +201,7 @@ let DisplayController = (function () {
       if (node.nodeName != "BUTTON") continue;
       if (node.classList.contains("active")) {
         if (node.classList.contains("easy")) return "easy";
-        else if (node.classList.contains("hard")) return "hard";
+        else return "hard";
       }
     }
   };
@@ -213,13 +215,33 @@ let DisplayController = (function () {
       controller.clearBoard();
       return;
     }
+    if (isDraw()) {
+      displayDraw();
+      controller.clearBoard();
+      return;
+    }
     currentPlayer = changePlayer(currentPlayer);
     displayMark.textContent = currentPlayer.getMark();
     buttons.forEach((button) => button.setAttribute("disabled", ""));
     setTimeout(() => {
       buttons.forEach((button) => button.removeAttribute("disabled"));
     }, 200);
+    botPlay();
   };
+
+  let isDraw = function () {
+    for (btn of buttons) {
+      if (btn.textContent == "") return false;
+    }
+    return true;
+  };
+
+  let displayDraw = function () {
+    overlay.classList.add("active");
+    message.classList.add("active");
+    message.getElementsByClassName("text")[0].textContent = `it's a Draw!`;
+  };
+
   let changePlayer = function (player) {
     if (player == player1) return player2;
     else return player1;
@@ -237,6 +259,7 @@ let DisplayController = (function () {
     message.childNodes[0].textContent = "";
     overlay.classList.remove("active");
     message.classList.remove("active");
+    controller.updatePlayersInfo();
   };
 
   message
@@ -246,6 +269,43 @@ let DisplayController = (function () {
   texts.forEach((text) =>
     text.addEventListener("change", () => controller.updatePlayersInfo())
   );
+
+  let easyBot = function () {
+    let num = parseInt(Math.random() * 9);
+    btn = buttons[num];
+    if (btn.textContent != "") {
+      return easyBot();
+    }
+    btn.textContent = currentPlayer.getMark();
+    index = btn.classList[0].split("");
+    GameBoard.setMark(currentPlayer.getMark(), index[0], index[1]);
+    if (GameBoard.checkWinner(currentPlayer.getMark())) {
+      displayWinner(currentPlayer);
+      controller.clearBoard();
+      return;
+    }
+    if (isDraw()) {
+      displayDraw();
+      controller.clearBoard();
+      return;
+    }
+
+    currentPlayer = changePlayer(currentPlayer);
+    displayMark.textContent = currentPlayer.getMark();
+    buttons.forEach((button) => button.setAttribute("disabled", ""));
+    setTimeout(() => {
+      buttons.forEach((button) => button.removeAttribute("disabled"));
+    }, 200);
+    botPlay();
+  };
+
+  let botPlay = function () {
+    if (currentPlayer.getKind() == "bot") {
+      if (controller.getDifficulty() == "easy") {
+        easyBot();
+      }
+    }
+  };
 
   return controller;
 })();
