@@ -115,6 +115,7 @@ let DisplayController = (function () {
   let overlay = document.querySelector(".overlay");
   let message = document.querySelector(".message");
   let texts = document.querySelectorAll(".player input");
+  let reset = message.getElementsByClassName("reset")[0];
 
   let counter = 0;
   let player1 = Player();
@@ -135,6 +136,38 @@ let DisplayController = (function () {
       buttons[i].textContent = GameBoard.getBoard()[index[0]][index[1]];
     }
   };
+
+  let resetInfo = function () {
+    if (
+      player1Info.getElementsByClassName("bot")[0].classList.contains("active")
+    ) {
+      player1Info.getElementsByClassName("bot")[0].classList.remove("active");
+      player1Info.getElementsByClassName("human")[0].classList.add("active");
+    }
+    if (
+      player2Info
+        .getElementsByClassName("human")[0]
+        .classList.contains("active")
+    ) {
+      player2Info.getElementsByClassName("human")[0].classList.remove("active");
+      player2Info.getElementsByClassName("bot")[0].classList.add("active");
+    }
+    if (
+      difficulty.getElementsByClassName("hard")[0].classList.contains("active")
+    ) {
+      difficulty.getElementsByClassName("hard")[0].classList.remove("active");
+      difficulty.getElementsByClassName("easy")[0].classList.add("active");
+    }
+
+    player1Info.getElementsByTagName("input")[0].value = "";
+
+    controller.difficulty = controller.getDifficulty();
+    message.childNodes[0].textContent = "";
+    overlay.classList.remove("active");
+    message.classList.remove("active");
+    controller.updatePlayersInfo();
+  };
+
   function toggleState() {
     this.classList.add("active");
     let siblings = this.parentNode.childNodes;
@@ -222,11 +255,9 @@ let DisplayController = (function () {
     }
     currentPlayer = changePlayer(currentPlayer);
     displayMark.textContent = currentPlayer.getMark();
-    buttons.forEach((button) => button.setAttribute("disabled", ""));
     setTimeout(() => {
-      buttons.forEach((button) => button.removeAttribute("disabled"));
+      botPlay();
     }, 200);
-    botPlay();
   };
 
   let isDraw = function () {
@@ -235,6 +266,8 @@ let DisplayController = (function () {
     }
     return true;
   };
+
+  reset.addEventListener("click", resetInfo);
 
   let displayDraw = function () {
     overlay.classList.add("active");
@@ -292,11 +325,9 @@ let DisplayController = (function () {
 
     currentPlayer = changePlayer(currentPlayer);
     displayMark.textContent = currentPlayer.getMark();
-    buttons.forEach((button) => button.setAttribute("disabled", ""));
     setTimeout(() => {
-      buttons.forEach((button) => button.removeAttribute("disabled"));
+      botPlay();
     }, 200);
-    botPlay();
   };
 
   let botPlay = function () {
