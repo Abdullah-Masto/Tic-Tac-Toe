@@ -1,10 +1,13 @@
-const GameBoard = (function () {
+const GameBoardMaker = function () {
   let board = [
     ["", "", ""],
     ["", "", ""],
     ["", "", ""],
   ];
   let game = {};
+  game.setBoard = function (array) {
+    board = [[...array[0]], [...array[1]], [...array[2]]];
+  };
   game.setMark = function (mark, x, y) {
     board[y][x] = mark;
   };
@@ -59,9 +62,19 @@ const GameBoard = (function () {
   game.getBoard = function () {
     return board;
   };
+  game.isFull = function () {
+    for (a of board) {
+      for (b of a) {
+        if (b == "") return false;
+      }
+    }
+    return true;
+  };
 
   return game;
-})();
+};
+
+let GameBoard = GameBoardMaker();
 
 let Player = function () {
   let mark;
@@ -242,7 +255,7 @@ let DisplayController = (function () {
     if (this.textContent != "") return;
     this.textContent = currentPlayer.getMark();
     index = this.classList[0].split("");
-    GameBoard.setMark(currentPlayer.getMark(), index[0], index[1]);
+    GameBoard.setMark(currentPlayer.getMark(), index[1], index[0]);
     if (GameBoard.checkWinner(currentPlayer.getMark())) {
       displayWinner(currentPlayer);
       controller.clearBoard();
@@ -303,16 +316,9 @@ let DisplayController = (function () {
     text.addEventListener("change", () => controller.updatePlayersInfo())
   );
 
-  let easyBot = function () {
-    let num = parseInt(Math.random() * 9);
-    btn = buttons[num];
-    if (btn.textContent != "") {
-      return easyBot();
-    }
-    btn.textContent = currentPlayer.getMark();
-    index = btn.classList[0].split("");
-    GameBoard.setMark(currentPlayer.getMark(), index[0], index[1]);
-    if (GameBoard.checkWinner(currentPlayer.getMark())) {
+  let playAuto = function (mark, index) {
+    GameBoard.setMark(mark, index[1], index[0]);
+    if (GameBoard.checkWinner(mark)) {
       displayWinner(currentPlayer);
       controller.clearBoard();
       return;
@@ -330,10 +336,99 @@ let DisplayController = (function () {
     }, 200);
   };
 
+  let easyBot = function () {
+    let num = parseInt(Math.random() * 9);
+    btn = buttons[num];
+    if (btn.textContent != "") {
+      return easyBot();
+    }
+    btn.textContent = currentPlayer.getMark();
+    index = btn.classList[0].split("");
+    let mark = currentPlayer.getMark();
+    playAuto(mark, index);
+  };
+
+  let actions = function (array) {
+    let answers = [];
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        if (array[i][j] == "") {
+          answers.push([i.toString(), j.toString()]);
+        }
+      }
+    }
+    return answers;
+  };
+
+  let result = function (board, mark, index) {
+    let tempGameBoard = GameBoardMaker();
+    tempGameBoard.setBoard(board.getBoard());
+    tempGameBoard.setMark(mark, parseInt(index[1]), parseInt(index[0]));
+    return tempGameBoard;
+  };
+
+  let minMax = function (board, maxPlayer) {
+    let index = ["0", "0"];
+    if (board.checkWinner("X")) return [1, index];
+
+    if (board.checkWinner("O")) return [-1, index];
+    if (board.isFull()) return [0, index];
+
+    let array = board.getBoard();
+    let currentBoard = [[...array[0]], [...array[1]], [...array[2]]];
+    let value;
+
+    if (maxPlayer) {
+      value = -Infinity;
+      let actionsArray = actions(currentBoard);
+      for (action of actionsArray) {
+        let tempBoard = result(board, "X", action);
+        let mima = minMax(tempBoard, false);
+        if (mima[0] > value) {
+          value = mima[0];
+          index = action;
+        }
+      }
+    }
+
+    if (!maxPlayer) {
+      value = Infinity;
+      let actionsArray = actions(currentBoard);
+      for (action of actionsArray) {
+        let tempBoard = result(board, "O", action);
+        let mima = minMax(tempBoard, true);
+        if (mima[0] < value) {
+          value = mima[0];
+          index = action;
+        }
+      }
+    }
+
+    board.setBoard(currentBoard);
+    return [value, index];
+  };
+
+  let hardBot = function () {
+    let tempGameBoard = GameBoardMaker();
+    tempGameBoard.setBoard(GameBoard.getBoard());
+    let isMax;
+    if (currentPlayer == player1) isMax = true;
+    else isMax = false;
+    let index = minMax(tempGameBoard, isMax)[1];
+    let mark = currentPlayer.getMark();
+    let btn;
+    let btns = Array.from(buttons);
+    btn = btns.find((btn) => btn.classList[0] == index[0] + "" + index[1]);
+    btn.textContent = mark;
+    playAuto(mark, index);
+  };
+
   let botPlay = function () {
     if (currentPlayer.getKind() == "bot") {
       if (controller.getDifficulty() == "easy") {
         easyBot();
+      } else {
+        hardBot();
       }
     }
   };
