@@ -367,12 +367,13 @@ let DisplayController = (function () {
     return tempGameBoard;
   };
 
-  let minMax = function (board, maxPlayer) {
-    let index = ["0", "0"];
-    if (board.checkWinner("X")) return [1, index];
+  let bla;
 
-    if (board.checkWinner("O")) return [-1, index];
-    if (board.isFull()) return [0, index];
+  let minMax = function (board, maxPlayer) {
+    if (board.checkWinner("X")) return 1;
+
+    if (board.checkWinner("O")) return -1;
+    if (board.isFull()) return 0;
 
     let array = board.getBoard();
     let currentBoard = [[...array[0]], [...array[1]], [...array[2]]];
@@ -384,9 +385,8 @@ let DisplayController = (function () {
       for (action of actionsArray) {
         let tempBoard = result(board, "X", action);
         let mima = minMax(tempBoard, false);
-        if (mima[0] > value) {
-          value = mima[0];
-          index = action;
+        if (mima > value) {
+          value = mima;
         }
       }
     }
@@ -397,8 +397,43 @@ let DisplayController = (function () {
       for (action of actionsArray) {
         let tempBoard = result(board, "O", action);
         let mima = minMax(tempBoard, true);
-        if (mima[0] < value) {
-          value = mima[0];
+        if (mima < value) {
+          value = mima;
+        }
+      }
+    }
+
+    board.setBoard(currentBoard);
+    return value;
+  };
+
+  let bestMove = function (board, maxPlayer) {
+    let array = board.getBoard();
+    let currentBoard = [[...array[0]], [...array[1]], [...array[2]]];
+    let value;
+    let index;
+
+    if (maxPlayer) {
+      value = -Infinity;
+      let actionsArray = actions(currentBoard);
+      for (let action of actionsArray) {
+        let tempBoard = result(board, "X", action);
+        let mima = minMax(tempBoard, false);
+        if (mima > value) {
+          value = mima;
+          index = action;
+        }
+      }
+    }
+
+    if (!maxPlayer) {
+      value = Infinity;
+      let actionsArray = actions(currentBoard);
+      for (let action of actionsArray) {
+        let tempBoard = result(board, "O", action);
+        let mima = minMax(tempBoard, true);
+        if (mima < value) {
+          value = mima;
           index = action;
         }
       }
@@ -414,7 +449,7 @@ let DisplayController = (function () {
     let isMax;
     if (currentPlayer == player1) isMax = true;
     else isMax = false;
-    let index = minMax(tempGameBoard, isMax)[1];
+    let index = bestMove(tempGameBoard, isMax)[1];
     let mark = currentPlayer.getMark();
     let btn;
     let btns = Array.from(buttons);
